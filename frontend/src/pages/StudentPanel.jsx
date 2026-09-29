@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { io } from 'socket.io-client';
 import toast from 'react-hot-toast';
 import axios from 'axios';
+import { API_URL } from '../config';
 
 export default function StudentPanel() {
   const { user } = useAuth();
@@ -12,7 +13,7 @@ export default function StudentPanel() {
   useEffect(() => {
     const fetchAnnouncements = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/announcements');
+        const res = await axios.get(`${API_URL}/api/announcements`);
         const filtered = res.data.filter(a => a.targetAudience === 'ALL' || a.targetAudience === 'STUDENTS');
         setAnnouncements(filtered);
       } catch (error) {
@@ -21,7 +22,7 @@ export default function StudentPanel() {
     };
     fetchAnnouncements();
 
-    const socket = io('http://localhost:5000');
+    const socket = io(API_URL);
     
     socket.on('new_announcement', (announcement) => {
       if (announcement.targetAudience === 'ALL' || announcement.targetAudience === 'STUDENTS') {

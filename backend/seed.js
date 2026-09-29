@@ -44,7 +44,7 @@ const seedUsers = async () => {
       {
         name: 'Finance Manager',
         email: 'accountant@school.com',
-        password: 'password123',
+        password: 'password155554423',
         role: 'ACCOUNTANT',
       },
     ];

@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { API_URL } from '../config';
 
 const AuthContext = createContext();
 
@@ -17,7 +18,7 @@ export const AuthProvider = ({ children }) => {
       if (token) {
         try {
           const config = { headers: { Authorization: `Bearer ${token}` } };
-          const { data } = await axios.get('http://localhost:5000/api/auth/me', config);
+          const { data } = await axios.get(`${API_URL}/api/auth/me`, config);
           setUser({ ...data, token });
         } catch (error) {
           console.error('Auth error', error);
@@ -31,7 +32,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const { data } = await axios.post('http://localhost:5000/api/auth/login', { email, password });
+      const { data } = await axios.post(`${API_URL}/api/auth/login`, { email, password });
       localStorage.setItem('token', data.token);
       setUser(data);
       if (data.role === 'ADMIN') navigate('/admin');

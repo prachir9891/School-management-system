@@ -3,6 +3,7 @@ import { Users, GraduationCap, CalendarCheck, DollarSign, CheckCircle2, AlertCir
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { API_URL } from '../config';
 
 const attendanceData = [
   { name: 'Mon', attendance: 96 },
@@ -43,7 +44,7 @@ export default function PrincipalPanel() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await axios.post('http://localhost:5000/api/announcements', {
+      await axios.post(`${API_URL}/api/announcements`, {
         ...newAnnouncement,
         date: new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true })
       });

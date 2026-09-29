@@ -1,14 +1,31 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
+const http = require('http');
+const { Server } = require('socket.io');
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
+const announcementRoutes = require('./routes/announcementRoutes');
 const User = require('./models/User');
 
 dotenv.config();
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
+});
+app.set('io', io);
 
+io.on('connection', (socket) => {
+  console.log('A user connected:', socket.id);
+  socket.on('disconnect', () => {
+    console.log('User disconnected:', socket.id);
+  });
+});
 app.use(cors());
 app.use(express.json());
 
@@ -45,7 +62,7 @@ const seedUsers = async () => {
       for (const user of users) {
         await User.create(user);
       }
-      console.log('Test users seeded automatically into memory DB!');
+      console.log('Test users seeded automatically into DB!');
     }
   } catch (error) {
     console.error(`Seeding Error: ${error.message}`);
@@ -57,6 +74,7 @@ connectDB().then(() => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/announcements', announcementRoutes);
 
 app.get('/', (req, res) => {
   res.send('School Management API is running...');
@@ -69,4 +87,4 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: err.message || 'Internal Server Error' });
 });
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));

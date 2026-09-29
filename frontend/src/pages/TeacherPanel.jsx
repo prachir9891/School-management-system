@@ -3,6 +3,7 @@ import { Clock, Users, BookOpen, PenTool, ClipboardCheck, Megaphone } from 'luci
 import { io } from 'socket.io-client';
 import toast from 'react-hot-toast';
 import axios from 'axios';
+import { API_URL } from '../config';
 
 export default function TeacherPanel() {
   const [showAllTasks, setShowAllTasks] = useState(false);
@@ -12,7 +13,7 @@ export default function TeacherPanel() {
     // Fetch initial announcements
     const fetchAnnouncements = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/announcements');
+        const res = await axios.get(`${API_URL}/api/announcements`);
         const filtered = res.data.filter(a => a.targetAudience === 'ALL' || a.targetAudience === 'TEACHERS');
         setAnnouncements(filtered);
       } catch (error) {
@@ -22,7 +23,7 @@ export default function TeacherPanel() {
     fetchAnnouncements();
 
     // Socket.io connection
-    const socket = io('http://localhost:5000');
+    const socket = io(API_URL);
     
     socket.on('new_announcement', (announcement) => {
       if (announcement.targetAudience === 'ALL' || announcement.targetAudience === 'TEACHERS') {
