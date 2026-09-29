@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { Users, GraduationCap, CalendarCheck, DollarSign, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Users, GraduationCap, CalendarCheck, DollarSign, CheckCircle2, AlertCircle, Send } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
+import axios from 'axios';
+import toast from 'react-hot-toast';
 
 const attendanceData = [
   { name: 'Mon', attendance: 96 },
@@ -19,6 +21,41 @@ const COLORS = ['#10b981', '#f43f5e'];
 export default function PrincipalPanel() {
   const [showAllApprovals, setShowAllApprovals] = useState(false);
   const [showAllNotices, setShowAllNotices] = useState(false);
+
+  const [newAnnouncement, setNewAnnouncement] = useState({
+    title: '',
+    message: '',
+    type: 'Notice',
+    targetAudience: 'ALL',
+    isUrgent: false
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleAnnouncementChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setNewAnnouncement({
+      ...newAnnouncement,
+      [name]: type === 'checkbox' ? checked : value
+    });
+  };
+
+  const handleCreateAnnouncement = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      await axios.post('http://localhost:5000/api/announcements', {
+        ...newAnnouncement,
+        date: new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true })
+      });
+      toast.success('Announcement broadcasted successfully!');
+      setNewAnnouncement({ title: '', message: '', type: 'Notice', targetAudience: 'ALL', isUrgent: false });
+    } catch (error) {
+      toast.error('Failed to broadcast announcement');
+      console.error(error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
   const [pendingApprovals, setPendingApprovals] = useState([
     { id: 1, type: 'Leave Request', name: 'Sarah Jenkins (Teacher)', date: 'Today' },
     { id: 2, type: 'Event Approval', name: 'Science Fair 2026', date: 'Yesterday' },
@@ -197,6 +234,63 @@ export default function PrincipalPanel() {
               </li>
             ))}
           </ul>
+        </div>
+        
+        {/* Create Announcement */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col lg:col-span-2 mt-2">
+          <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-indigo-50/50">
+            <h3 className="text-lg font-semibold text-indigo-900 flex items-center">
+              <Send className="mr-2 h-5 w-5 text-indigo-500" /> Broadcast New Announcement
+            </h3>
+          </div>
+          <form onSubmit={handleCreateAnnouncement} className="p-6 space-y-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Title</label>
+                <input required type="text" name="title" value={newAnnouncement.title} onChange={handleAnnouncementChange} className="w-full border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow" placeholder="E.g. Emergency Staff Meeting" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Target Audience</label>
+                <select name="targetAudience" value={newAnnouncement.targetAudience} onChange={handleAnnouncementChange} className="w-full border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow bg-white">
+                  <option value="ALL">Everyone (Teachers & Students)</option>
+                  <option value="TEACHERS">Teachers Only</option>
+                  <option value="STUDENTS">Students Only</option>
+                </select>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Announcement Type</label>
+                <select name="type" value={newAnnouncement.type} onChange={handleAnnouncementChange} className="w-full border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow bg-white">
+                  <option value="Notice">Notice</option>
+                  <option value="Event">Event</option>
+                  <option value="Urgent">Urgent Warning</option>
+                  <option value="Meeting">Meeting</option>
+                  <option value="Work Instruction">Work Instruction</option>
+                </select>
+              </div>
+              <div className="flex items-center pt-6">
+                <label className="flex items-center space-x-3 cursor-pointer group">
+                  <div className="relative flex items-center justify-center">
+                    <input type="checkbox" name="isUrgent" checked={newAnnouncement.isUrgent} onChange={handleAnnouncementChange} className="peer w-5 h-5 text-rose-600 border-gray-300 rounded-md focus:ring-rose-500 cursor-pointer" />
+                  </div>
+                  <span className="text-sm font-bold text-gray-700 group-hover:text-rose-600 transition-colors">Mark as High Priority / Urgent</span>
+                </label>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Message Content</label>
+              <textarea required name="message" value={newAnnouncement.message} onChange={handleAnnouncementChange} rows="4" className="w-full border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow resize-none" placeholder="Type the detailed message here..."></textarea>
+            </div>
+
+            <div className="flex justify-end pt-2">
+              <button disabled={isSubmitting} type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-xl transition-colors flex items-center shadow-md hover:shadow-lg disabled:opacity-50">
+                {isSubmitting ? 'Broadcasting...' : 'Broadcast Announcement'} <Send className="ml-2 h-4 w-4" />
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
